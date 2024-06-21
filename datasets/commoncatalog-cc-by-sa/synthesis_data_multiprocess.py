@@ -66,6 +66,10 @@ def copy_json_file_with_timestamp(src, dst_dir):
         print(f"Unexpected error: {e}")
 
 
+def process_file_wrapper(fp, args, lock, processed_file_paths, processed_file_paths_path):
+    return process_file(fp, args, lock, processed_file_paths, processed_file_paths_path)
+
+
 def process_file(
     file_path, args, lock, processed_file_paths, processed_file_paths_path
 ):
@@ -162,7 +166,7 @@ def main(args):
         processed_file_paths = manager.list(processed_file_paths)
 
         with Pool(processes=args.num_processes) as pool:
-            for _ in tqdm(pool.imap_unordered(lambda fp: process_file(fp, args, lock, processed_file_paths, processed_file_paths_path), target_file_paths)):
+            for _ in tqdm(pool.imap_unordered(process_file_wrapper, target_file_paths)):
                 pass
 
     except Exception as e:
