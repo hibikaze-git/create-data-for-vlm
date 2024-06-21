@@ -3,6 +3,7 @@
 
 python synthesis_data_multiprocess.py ./commoncatalog-cc-by-sa-download/0 ./images/0 ./jsonl/0 --num_processes 3
 python synthesis_data_multiprocess.py ./commoncatalog-cc-by-sa-download/0/least_dim_range=768-1024 ./images/0/least_dim_range=768-1024 ./jsonl/0/least_dim_range=768-1024 --num_processes 2
+python synthesis_data_multiprocess.py ./commoncatalog-cc-by-sa-download/1/least_dim_range=1024-2048 ./images/1/least_dim_range=1024-2048 ./jsonl/1/least_dim_range=1024-2048 --num_processes 2
 """
 
 import argparse
@@ -66,7 +67,8 @@ def copy_json_file_with_timestamp(src, dst_dir):
         print(f"Unexpected error: {e}")
 
 
-def process_file_wrapper(fp, args, lock, processed_file_paths, processed_file_paths_path):
+def process_file_wrapper(args_lock_paths_fp):
+    args, lock, processed_file_paths, processed_file_paths_path, fp = args_lock_paths_fp
     return process_file(fp, args, lock, processed_file_paths, processed_file_paths_path)
 
 
@@ -166,7 +168,21 @@ def main(args):
         processed_file_paths = manager.list(processed_file_paths)
 
         with Pool(processes=args.num_processes) as pool:
-            for _ in tqdm(pool.imap_unordered(process_file_wrapper, target_file_paths)):
+            for _ in tqdm(
+                pool.imap_unordered(
+                    process_file_wrapper,
+                    [
+                        (
+                            args,
+                            lock,
+                            processed_file_paths,
+                            processed_file_paths_path,
+                            fp,
+                        )
+                        for fp in target_file_paths
+                    ],
+                )
+            ):
                 pass
 
     except Exception as e:
