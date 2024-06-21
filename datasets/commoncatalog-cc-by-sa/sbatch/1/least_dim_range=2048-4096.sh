@@ -16,7 +16,7 @@ conda activate llava-jp
 
 cd /storage4/work/yamaguchi/create-data-for-vlm
 #bash tools/update_0618cc_gpu_num.sh slurm0-a3-ghpc-2 stop 1
-echo "bash tools/update_0618cc_gpu_num.sh slurm0-a3-ghpc-1 stop 2" | at 20:00 21.06.2024
+echo "bash tools/update_0618cc_gpu_num.sh slurm0-a3-ghpc-2 stop 2" | at 20:00 21.06.2024
 
 cd /storage4/work/yamaguchi/create-data-for-vlm/datasets/commoncatalog-cc-by-sa
 
