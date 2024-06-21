@@ -12,8 +12,8 @@ English text: {text}\n"""
 
 class Phi3Manager:
     def __init__(self) -> None:
-        model_id = "microsoft/Phi-3-medium-4k-instruct"
-        #model_id = "microsoft/Phi-3-mini-4k-instruct"
+        #model_id = "microsoft/Phi-3-medium-4k-instruct"
+        model_id = "microsoft/Phi-3-mini-4k-instruct"
 
         model = AutoModelForCausalLM.from_pretrained(
             model_id,
@@ -39,15 +39,20 @@ class Phi3Manager:
         }
 
     def translate(self, text_dict):
-        synthesis_dict = {}
+        messages_list = []
 
         for key, text in text_dict.items():
             messages = [
                 {"role": "user", "content": TRANSLATE_PROMPT.format(text=text)},
             ]
 
-            output = self.pipe(messages, **self.generation_args)
+            messages_list.append(messages)
 
-            synthesis_dict[key + "_ja"] = output[0]["generated_text"].strip()
+        outputs = self.pipe(messages_list, **self.generation_args)
+
+        synthesis_dict = {
+            f"{key}_ja": output[0]["generated_text"].strip()
+            for key, output in zip(text_dict.keys(), outputs)
+        }
 
         return synthesis_dict
