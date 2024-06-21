@@ -105,7 +105,12 @@ def main(args):
                 item for item in file_paths if item not in processed_file_paths
             ]
 
-        print(target_file_paths[:5])
+        print(target_file_paths)
+
+        print("==================== progress ====================")
+        print(f"Remaining data: {len(target_file_paths)}")
+        print(f"{len(processed_file_paths)} / {len(file_paths)}")
+        print("==================================================")
 
         for file_path in tqdm(target_file_paths):
             print(file_path)
