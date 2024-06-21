@@ -12,8 +12,8 @@ English text: {text}\n"""
 
 class Phi3Manager:
     def __init__(self) -> None:
-        #model_id = "microsoft/Phi-3-medium-4k-instruct"
-        model_id = "microsoft/Phi-3-mini-4k-instruct"
+        model_id = "microsoft/Phi-3-medium-4k-instruct"
+        #model_id = "microsoft/Phi-3-mini-4k-instruct"
 
         model = AutoModelForCausalLM.from_pretrained(
             model_id,
