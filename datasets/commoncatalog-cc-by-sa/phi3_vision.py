@@ -27,7 +27,7 @@ class Phi3VisionManager:
         }
 
         self.generation_args = {
-            "max_new_tokens": 2048,
+            "max_new_tokens": 4096,
             "temperature": 0.0,
             "do_sample": False,
         }

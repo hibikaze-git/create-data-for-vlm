@@ -32,7 +32,7 @@ class Phi3Manager:
         )
 
         self.generation_args = {
-            "max_new_tokens": 2048,
+            "max_new_tokens": 4096,
             "return_full_text": False,
             "temperature": 0.0,
             "do_sample": False,
