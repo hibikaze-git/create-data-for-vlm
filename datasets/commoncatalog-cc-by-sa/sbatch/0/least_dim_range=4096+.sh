@@ -8,6 +8,7 @@
 #SBATCH --gpus-per-node=1
 #SBATCH --cpus-per-task=24
 #SBATCH --mem=100GB
+#SBATCH --begin=2024-06-21T14:00:00
 
 # Command(s) goes here
 source ~/miniconda3/etc/profile.d/conda.sh
