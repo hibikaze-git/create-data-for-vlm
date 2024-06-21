@@ -143,7 +143,7 @@ def main(args):
             )
         else:
             processed_file_paths_filename = (
-                f"processed_file_paths_{split_input_dir[-2] + split_input_dir[-1]}.json"
+                f"processed_file_paths_{split_input_dir[-2] + '_' + split_input_dir[-1]}.json"
             )
 
         processed_file_paths_path = os.path.join(processed_file_paths_filename)
