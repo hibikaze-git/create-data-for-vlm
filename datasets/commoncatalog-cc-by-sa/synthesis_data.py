@@ -66,6 +66,14 @@ def copy_json_file_with_timestamp(src, dst_dir):
         print(f"Unexpected error: {e}")
 
 
+def list_jsonl_files(directory):
+    # 指定されたディレクトリ内の.jsonlファイルを取得
+    jsonl_files = glob.glob(os.path.join(directory, '*.jsonl'))
+    # ファイル名だけを抽出
+    jsonl_files = [int(os.path.basename(file).replace(".jsonl", "")) for file in jsonl_files]
+    return jsonl_files
+
+
 def main(args):
     phi3_vision_manager = Phi3VisionManager()
     phi3_manager = Phi3Manager()
@@ -107,10 +115,10 @@ def main(args):
 
         print(target_file_paths)
 
-        print("==================== progress ====================")
+        print("\n==================== progress ====================")
         print(f"Remaining data: {len(target_file_paths)}")
         print(f"{len(processed_file_paths)} / {len(file_paths)}")
-        print("==================================================")
+        print("==================================================\n")
 
         for file_path in tqdm(target_file_paths):
             print(file_path)
@@ -123,34 +131,46 @@ def main(args):
                 "parquet", data_files=file_path, split="train", cache_dir=cache_dir
             )
 
-            output_filename = filename + ".jsonl"
-            output_path = os.path.join(args.jsonl_output_dir, output_filename)
+            output_parent_path = os.path.join(args.jsonl_output_dir, filename)
+            make_dir(output_parent_path)
 
-            jsonl_dataset = []
+            image_output_parent_path = os.path.join(args.image_output_dir, filename)
+            make_dir(image_output_parent_path)
+
+            processed_photoids = list_jsonl_files(output_parent_path)
+            print("\n==================== processed_photoids ====================")
+            print(processed_photoids)
+            print("============================================================\n")
 
             for i, data in tqdm(enumerate(dataset)):
-                image_output_path = os.path.join(
-                    args.image_output_dir, f"{data['photoid']}.{data['ext']}"
-                )
+                print(data["photoid"])
 
-                with open(image_output_path, "wb") as file:
-                    file.write(data["jpg"])
+                if data["photoid"] not in processed_photoids:
+                    output_filename = str(data["photoid"]) + ".jsonl"
+                    output_path = os.path.join(output_parent_path, output_filename)
 
-                synthesis_dict = phi3_vision_manager.synthesis(image_output_path)
+                    image_output_path = os.path.join(
+                        image_output_parent_path, f"{data['photoid']}.{data['ext']}"
+                    )
 
-                synthesis_dict.update(phi3_manager.translate(synthesis_dict))
+                    with open(image_output_path, "wb") as file:
+                        file.write(data["jpg"])
 
-                synthesis_dict["photoid"] = data["photoid"]
-                synthesis_dict["ext"] = data["ext"]
+                    synthesis_dict = phi3_vision_manager.synthesis(image_output_path)
 
-                jsonl_dataset.append(synthesis_dict)
+                    synthesis_dict.update(phi3_manager.translate(synthesis_dict))
+
+                    synthesis_dict["photoid"] = data["photoid"]
+                    synthesis_dict["ext"] = data["ext"]
+
+                    with open(output_path, "w", encoding="utf-8") as f:
+                        f.write(json.dumps(synthesis_dict, ensure_ascii=False) + "\n")
+
+                else:
+                    print(f"skip: {data['photoid']}")
 
                 #if i == 3:
                 #    break
-
-            with open(output_path, "w", encoding="utf-8") as f:
-                for i, data in enumerate(jsonl_dataset):
-                    f.write(json.dumps(data, ensure_ascii=False) + "\n")
 
             processed_file_paths.append(file_path)
 
