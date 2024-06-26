@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Command line options go here
-#SBATCH --time=7:45:00
+#SBATCH --time=10:00:00
 #SBATCH --nodelist=slurm0-a3-ghpc-15
 #SBATCH --job-name=vlm_synthesis_data
 #SBATCH --output=sbatch_logs/0_least_dim_range=2048-4096.out
