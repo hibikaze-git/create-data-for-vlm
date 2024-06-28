@@ -86,25 +86,32 @@ class Phi3Manager:
             "do_sample": False,
         }
 
-    def translate(self, text):
+    def translate(self, text_batch):
         messages_list = []
-
         design_prompt = random.choice(DESIGN_LIST)
 
-        messages = [
-            {
-                "role": "user",
-                "content": GEN_HTML_PROMPT.format(
-                    design_prompt=design_prompt, text=text
-                ),
-            },
-        ]
+        for item in text_batch:
+            messages = [
+                {
+                    "role": "user",
+                    "content": GEN_HTML_PROMPT.format(
+                        design_prompt=design_prompt, text=item["text"]
+                    ),
+                },
+            ]
 
-        messages_list.append(messages)
+            messages_list.append(messages)
 
         outputs = self.pipe(messages_list, **self.generation_args)
 
-        synthesis_dict = {"html": outputs[0][0]["generated_text"].strip()}
-        synthesis_dict["design_prompt"] = design_prompt
+        synthesis_dict_list = [
+            {
+                "html": output[0]["generated_text"].strip(),
+                "text": item["text"],
+                "id": item["id"],
+                "design_prompt": design_prompt,
+            }
+            for item, output in zip(text_batch, outputs)
+        ]
 
-        return synthesis_dict
+        return synthesis_dict_list

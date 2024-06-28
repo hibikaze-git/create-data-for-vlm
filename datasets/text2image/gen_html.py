@@ -28,7 +28,7 @@ def list_jsonl_texts(directory):
     text_list = []
 
     for jsonl_file in jsonl_files:
-        with open(jsonl_file, 'r', encoding='utf-8') as f:
+        with open(jsonl_file, "r", encoding="utf-8") as f:
             text_list.append(json.loads(f.readline())["text"])
 
     return text_list
@@ -43,38 +43,44 @@ def main(args):
     )
 
     processed_ids = list_jsonl_texts(args.jsonl_output_dir)
-    #processed_ids = []
+    # processed_ids = []
     print("\n==================== processed_ids ====================")
     print(processed_ids)
     print("============================================================\n")
 
     count = 0
+    batch_num = 6
+    text_batch = []
 
     for i, data in tqdm(enumerate(dataset["train"])):
         text = data["text"]
 
         if text not in processed_ids:
-            output_filename = str(i) + ".jsonl"
-            output_path = os.path.join(args.jsonl_output_dir, output_filename)
+            text_batch.append({"text": text, "id": i})
 
-            try:
-                synthesis_dict = phi3_manager.translate(text)
-            except torch.cuda.OutOfMemoryError as e:
-                print(e)
-                continue
+            if len(text_batch) == batch_num:
+                try:
+                    synthesis_dict_list = phi3_manager.translate(text_batch)
+                except torch.cuda.OutOfMemoryError as e:
+                    print(e)
+                    continue
 
-            synthesis_dict["text"] = text
-            synthesis_dict["dataset_repo"] = args.dataset_repo
+                for synthesis_dict in synthesis_dict_list:
+                    synthesis_dict["dataset_repo"] = args.dataset_repo
 
-            with open(output_path, "w", encoding="utf-8") as f:
-                f.write(json.dumps(synthesis_dict, ensure_ascii=False) + "\n")
+                    output_filename = str(synthesis_dict["id"]) + ".jsonl"
+                    output_path = os.path.join(args.jsonl_output_dir, output_filename)
 
+                    with open(output_path, "w", encoding="utf-8") as f:
+                        f.write(json.dumps(synthesis_dict, ensure_ascii=False) + "\n")
+
+                text_batch = []
         else:
             print(f"skip: {text}")
 
         count += 1
 
-        #if count >= 50000:
+        # if count >= 50000:
         #    print("processd max data num")
         #    break
 
