@@ -1,17 +1,15 @@
+from prompts import PROMPT_DICT
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
-TRANSLATE_PROMPT = """You are a translator proficient in English and Japanese. Your task is to translate the following English text into Japanese, focusing on a natural and fluent result that avoids “translationese”. Please consider these points:
-1. Keep proper nouns, brands, and geographical names in English.
-2. Retain technical terms or jargon in English.
-3. Use Japanese idiomatic expressions for English idioms or proverbs to ensure cultural relevance.
-4. Ensure quotes or direct speech sound natural in Japanese, maintaining the original’s tone.
-5. Answer only the translation result. No explanation of the translation results is required.
+REMOVE_NEW_LINE = [
+    "finqa",
+]
 
-English text: {text}"""
+EXTRACT_QUESTION = ["aokvqa"]
 
 
 class Phi3Manager:
-    def __init__(self) -> None:
+    def __init__(self, subset_name) -> None:
         model_id = "microsoft/Phi-3-medium-4k-instruct"
         # model_id = "microsoft/Phi-3-mini-4k-instruct"
 
@@ -38,13 +36,24 @@ class Phi3Manager:
             "do_sample": False,
         }
 
+        self.prompt = PROMPT_DICT[subset_name]
+
+        self.remove_new_line = True if subset_name in REMOVE_NEW_LINE else False
+        self.extract_question = True if subset_name in EXTRACT_QUESTION else False
+
     def translate(self, texts):
         user_messages_list = []
         assistant_messages_list = []
 
         for text in texts:
+            if self.remove_new_line:
+                text["user"] = text["user"].replace("\n", "")
+
+            if self.extract_question:
+                text["user"] = text["user"].split("\n")[0]
+
             messages = [
-                {"role": "user", "content": TRANSLATE_PROMPT.format(text=text["user"])},
+                {"role": "user", "content": self.prompt.format(text=text["user"])},
             ]
 
             user_messages_list.append(messages)
@@ -53,7 +62,7 @@ class Phi3Manager:
             messages = [
                 {
                     "role": "user",
-                    "content": TRANSLATE_PROMPT.format(text=text["assistant"]),
+                    "content": self.prompt.format(text=text["assistant"]),
                 },
             ]
 

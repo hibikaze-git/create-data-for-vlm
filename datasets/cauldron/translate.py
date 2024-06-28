@@ -9,6 +9,8 @@ import glob
 import json
 import os
 
+import torch
+
 from phi3 import Phi3Manager
 from tqdm import tqdm
 
@@ -31,7 +33,7 @@ def list_jsonl_files(directory):
 
 
 def main(args):
-    phi3_manager = Phi3Manager()
+    phi3_manager = Phi3Manager(args.subset_name)
 
     dataset = load_dataset(
         "team-hatakeyama-phase2/the_cauldron_subset_with_id",
@@ -40,9 +42,12 @@ def main(args):
     )
 
     processed_ids = list_jsonl_files(args.jsonl_output_dir)
+    #processed_ids = []
     print("\n==================== processed_ids ====================")
     print(processed_ids)
     print("============================================================\n")
+
+    count = 0
 
     for i, data in tqdm(enumerate(dataset["train"])):
         print(data["id"])
@@ -51,7 +56,11 @@ def main(args):
             output_filename = str(data["id"]) + ".jsonl"
             output_path = os.path.join(args.jsonl_output_dir, output_filename)
 
-            synthesis_dict = phi3_manager.translate(data["texts"])
+            try:
+                synthesis_dict = phi3_manager.translate(data["texts"])
+            except torch.cuda.OutOfMemoryError as e:
+                print(e)
+                continue
 
             synthesis_dict["id"] = data["id"]
             synthesis_dict["texts"] = data["texts"]
@@ -62,7 +71,9 @@ def main(args):
         else:
             print(f"skip: {data['id']}")
 
-        if i >= 50000:
+        count += 1
+
+        if count >= 50000:
             print("processd max data num")
             break
 
