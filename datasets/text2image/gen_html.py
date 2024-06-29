@@ -49,7 +49,7 @@ def main(args):
     print("============================================================\n")
 
     count = 0
-    batch_num = 6
+    batch_num = 4
     text_batch = []
 
     for i, data in tqdm(enumerate(dataset["train"])):

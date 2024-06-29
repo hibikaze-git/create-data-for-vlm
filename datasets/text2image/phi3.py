@@ -77,6 +77,7 @@ class Phi3Manager:
             "text-generation",
             model=model,
             tokenizer=tokenizer,
+            batch_size=4,
         )
 
         self.generation_args = {
