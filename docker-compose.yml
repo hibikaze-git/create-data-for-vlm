@@ -13,8 +13,8 @@ services:
     ports:
       - 8888:8888
       #- 6006:6006
-    #profiles:
-      #- preprocessing
+    profiles:
+      - ubuntu-cuda
     #privileged: true
     #devices:
       #- /dev/video0:/dev/video0
@@ -27,3 +27,15 @@ services:
             device_ids: ['1']
             capabilities: [gpu]
     command: jupyter-lab --port=8888 --ip=0.0.0.0 --allow-root --NotebookApp.token=''
+
+  html2image:
+    build: ./datasets/text2image/html2image
+    environment:
+      - HF_TOKEN=
+    volumes:
+      - ./datasets/text2image:/home/docker/work
+    working_dir: /home/docker/work
+    tty: true
+    profiles:
+      - html2image
+    shm_size: '16gb'
