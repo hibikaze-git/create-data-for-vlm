@@ -31,6 +31,7 @@ PROMPT_DICT = {
     "vistext": TRANSLATE_PROMPT,
     "chartqa": TRANSLATE_PROMPT_CHARTQA,
     "plotqa": TRANSLATE_PROMPT,
+    "plotqa_shuffle": TRANSLATE_PROMPT,
     "mapqa": TRANSLATE_PROMPT,
     "tat_qa": TRANSLATE_PROMPT,
     "hitab": TRANSLATE_PROMPT,

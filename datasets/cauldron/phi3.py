@@ -27,6 +27,7 @@ class Phi3Manager:
             "text-generation",
             model=model,
             tokenizer=tokenizer,
+            batch_size=4 if subset_name == "plotqa_shuffle" else 1,
         )
 
         self.generation_args = {
