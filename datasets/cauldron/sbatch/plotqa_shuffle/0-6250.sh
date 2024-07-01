@@ -4,7 +4,7 @@
 #SBATCH --time=2:40:00
 #SBATCH --nodelist=slurm0-a3-ghpc-2
 #SBATCH --job-name=vlm_translate_data
-#SBATCH --output=sbatch_logs/plotqa.out
+#SBATCH --output=sbatch_logs/plotq_0-6250.out
 #SBATCH --gpus-per-node=1
 #SBATCH --cpus-per-task=24
 #SBATCH --mem=100GB
