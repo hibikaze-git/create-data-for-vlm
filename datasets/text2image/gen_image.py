@@ -1,34 +1,100 @@
+"""
+python gen_image.py --num_workers 8
+"""
+
+import argparse
+import json
+import os
+from multiprocessing import Manager, Pool, cpu_count
+
 from html2image import Html2Image
+from tqdm import tqdm
 
 from datasets import load_dataset
 
-hti = Html2Image(output_path="./images")
-
+hti = Html2Image(output_path="./images", disable_logging=True)
 dataset = load_dataset("team-hatakeyama-phase2/text2html", cache_dir="./cache")
+sizes = [(768, 768), (1280, 1280), (1280, 768), (768, 1280)]
 
 
+# HTMLのパース関数
 def parse_html(html_text):
     html_text = "<!DOCTYPE html>" + html_text.split("<!DOCTYPE html>")[-1]
     html_text = html_text.split("</html>")[0] + "</html>"
-    html_text = html_text.replace('class="animated-text"', "")
-
     return html_text
 
 
-for i, data in enumerate(dataset["train"]):
-    html_text = data["html"]
+# HTMLを画像に変換する関数
+def convert_to_image(data_metadata_list):
+    data, metadata_list = data_metadata_list
+    i, content = data
 
-    if (
-        "<!DOCTYPE html>" in html_text
-        #and '<html lang="ja">' in html_text
-        and "</html>" in html_text
-    ):
+    html_text = content["html"]
+
+    if "<!DOCTYPE html>" in html_text and "</html>" in html_text:
         html_text = parse_html(html_text)
+        html_file_path = f"./tmp/index_{i}.html"
 
-        with open("./index.html", "w", encoding="utf-8") as f:
+        with open(html_file_path, "w", encoding="utf-8") as f:
             f.write(html_text)
 
-        hti.screenshot(html_file="./index.html", save_as=f"{i}.jpg")
+        try:
+            content["text_len"] = len(content["text"])
+            content["html"] = html_text
 
-    if i == 99:
-        break
+            for size in sizes:
+                image_file = f"{i}_{'-'.join(map(str, size))}.jpg"
+                hti.screenshot(
+                    html_file=html_file_path,
+                    save_as=image_file,
+                    size=size,
+                )
+
+                content["file_name"] = image_file
+                content["size"] = "-".join(map(str, size))
+
+                metadata_list.append(content)
+        finally:
+            # HTMLファイルを削除
+            os.remove(html_file_path)
+
+
+def main(num_workers):
+    manager = Manager()
+    metadata_list = manager.list()
+
+    # データセットのリストを作成
+    dataset_list = [(i, content) for i, content in enumerate(dataset["train"])]
+
+    with Pool(processes=num_workers) as pool:
+        with tqdm(total=len(dataset_list)) as pbar:
+            for _ in pool.imap_unordered(
+                convert_to_image, [(data, metadata_list) for data in dataset_list]
+            ):
+                pbar.update()
+
+    return list(metadata_list)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Process HTML to images with multiprocessing."
+    )
+    parser.add_argument(
+        "--num_workers",
+        type=int,
+        default=cpu_count(),
+        help="Number of worker processes to use.",
+    )
+    args = parser.parse_args()
+
+    metadata_list = main(args.num_workers)
+
+    with open("./images/metadata.jsonl", "w", encoding="utf-8") as f:
+        for html_text in metadata_list:
+            f.write(json.dumps(html_text, ensure_ascii=False) + "\n")
+
+    upload_dataset = load_dataset(
+        "imagefolder", data_dir="./images", cache_dir="./cache"
+    )
+    upload_dataset.push_to_hub("team-hatakeyama-phase2/web-images-for-text-understanding")
