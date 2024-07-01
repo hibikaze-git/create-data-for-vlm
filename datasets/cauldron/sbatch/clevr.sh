@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Command line options go here
-#SBATCH --time=9:30:00
+#SBATCH --time=14:40:00
 #SBATCH --nodelist=slurm0-a3-ghpc-0
 #SBATCH --job-name=vlm_translate_data
 #SBATCH --output=sbatch_logs/clevr.out
