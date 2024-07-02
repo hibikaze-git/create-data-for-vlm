@@ -18,6 +18,6 @@ cd /storage4/work/yamaguchi/create-data-for-vlm
 bash tools/update_0618cc_gpu_num.sh slurm0-a3-ghpc-0 stop 1
 #echo "bash tools/update_0618cc_gpu_num.sh slurm0-a3-ghpc-0 stop 1" | at 1:00 22.06.2024
 
-cd /storage4/work/yamaguchi/create-data-for-vlm/datasets/commoncatalog-cc-by-sa
+cd /storage4/work/yamaguchi/create-data-for-vlm/datasets/complex_reasoning
 
 python synthesis_data.py ./commoncatalog-cc-by-sa-download/4/least_dim_range=4096+ ./images/4/least_dim_range=4096+ ./jsonl/4/least_dim_range=4096+
