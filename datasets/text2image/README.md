@@ -15,7 +15,7 @@ git clone https://github.com/vgalin/html2image.git
 docker compose --profile html2image build
 docker compose --profile html2image up -d
 docker compose exec html2image bash
-pip install datasets
+pip install datasets Pillow
 apt install -y fonts-ipafont fonts-ipaexfont
 ```
 ### 実行

@@ -5,7 +5,7 @@ python gen_image.py --num_workers 8
 import argparse
 import json
 import os
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from multiprocessing import Manager, Pool, cpu_count
 
 from html2image import Html2Image
 from tqdm import tqdm
@@ -16,8 +16,8 @@ IMAGE_DIR = "./tmp/images"
 
 hti = Html2Image(output_path=IMAGE_DIR, disable_logging=True)
 
-#subset_name = "ner-wikipedia-dataset"
-subset_name = "wikipedia-22-12-ja-embeddings"
+subset_name = "ner-wikipedia-dataset"
+#subset_name = "wikipedia-22-12-ja-embeddings"
 
 dataset = load_dataset(
     "team-hatakeyama-phase2/text2html", subset_name, cache_dir="./cache"
@@ -45,22 +45,27 @@ def parse_html(html_text):
 
 
 # HTMLを画像に変換する関数
-def convert_to_image(data):
+def convert_to_image(data, metadata_list):
     i, content = data
+
+    print(i)
 
     html_text = content["html"]
 
     if "<!DOCTYPE html>" in html_text and "</html>" in html_text:
         html_text = parse_html(html_text)
+        html_file_path = f"./tmp/index_{i}.html"
+
+        with open(html_file_path, "w", encoding="utf-8") as f:
+            f.write(html_text)
 
         content["text_len"] = len(content["text"])
         content["html"] = html_text
 
-        results = []
         for size in sizes:
             image_file = f"{i}_{'-'.join(map(str, size))}.jpg"
             hti.screenshot(
-                html_str=html_text,
+                html_file=html_file_path,
                 save_as=image_file,
                 size=size,
             )
@@ -68,12 +73,16 @@ def convert_to_image(data):
             content["file_name"] = image_file
             content["size"] = "-".join(map(str, size))
 
-            results.append(content.copy())
+            metadata_list.append(content)
 
-        return results
+        # HTMLファイルを削除
+        os.remove(html_file_path)
 
 
 def main(num_workers):
+    manager = Manager()
+    metadata_list = manager.list()
+
     # データセットのリストを作成
     dataset_list = [(i, content) for i, content in enumerate(dataset["train"])]
 
@@ -81,16 +90,13 @@ def main(num_workers):
     print(len(dataset_list))
     print("===============================")
 
-    metadata_list = []
+    # プロセスプールを作成して実行
+    with Pool(processes=num_workers) as pool:
+        pool.starmap(
+            convert_to_image, [(data, metadata_list) for data in dataset_list]
+        )
 
-    with ProcessPoolExecutor(max_workers=num_workers) as executor:
-        futures = [executor.submit(convert_to_image, data) for data in dataset_list]
-        for future in tqdm(as_completed(futures), total=len(futures)):
-            result = future.result()
-            if result:
-                metadata_list.extend(result)
-
-    return metadata_list
+    return list(metadata_list)
 
 
 if __name__ == "__main__":
@@ -100,13 +106,14 @@ if __name__ == "__main__":
     parser.add_argument(
         "--num_workers",
         type=int,
-        default=os.cpu_count(),
+        default=cpu_count(),
         help="Number of worker processes to use.",
     )
     args = parser.parse_args()
 
     delete_files(IMAGE_DIR, "jsonl")
     delete_files(IMAGE_DIR, "jpg")
+    delete_files("./tmp", "html")
 
     metadata_list = main(args.num_workers)
 
@@ -123,3 +130,4 @@ if __name__ == "__main__":
 
     delete_files(IMAGE_DIR, "jsonl")
     delete_files(IMAGE_DIR, "jpg")
+    delete_files("./tmp", "html")
