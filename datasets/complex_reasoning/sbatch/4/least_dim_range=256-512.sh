@@ -1,14 +1,14 @@
 #!/bin/bash
 
 # Command line options go here
-#SBATCH --time=5:30:00
+#SBATCH --time=11:45:00
 #SBATCH --nodelist=slurm0-a3-ghpc-0
 #SBATCH --job-name=vlm_synthesis_data
 #SBATCH --output=sbatch_logs/4_least_dim_range=256-512.out
 #SBATCH --gpus-per-node=1
 #SBATCH --cpus-per-task=24
 #SBATCH --mem=100GB
-# --begin=2024-06-22T06:00:02
+#SBATCH --begin=2024-07-03T16:00:00
 
 # Command(s) goes here
 source ~/miniconda3/etc/profile.d/conda.sh
