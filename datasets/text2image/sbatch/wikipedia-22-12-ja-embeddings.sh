@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Command line options go here
-#SBATCH --time=7:45:00
+#SBATCH --time=7:15:00
 #SBATCH --nodelist=slurm0-a3-ghpc-1
 #SBATCH --job-name=vlm_t2h
 #SBATCH --output=sbatch_logs/wikipedia-22-12-ja-embeddings.out
