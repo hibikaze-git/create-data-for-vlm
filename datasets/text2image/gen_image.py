@@ -12,9 +12,27 @@ from tqdm import tqdm
 
 from datasets import load_dataset
 
-hti = Html2Image(output_path="./images", disable_logging=True)
-dataset = load_dataset("team-hatakeyama-phase2/text2html", cache_dir="./cache")
+IMAGE_DIR = "./tmp/images"
+
+hti = Html2Image(output_path=IMAGE_DIR, disable_logging=True)
+
+subset_name = "ner-wikipedia-dataset"
+dataset = load_dataset(
+    "team-hatakeyama-phase2/text2html", subset_name, cache_dir="./cache"
+)
 sizes = [(768, 768), (1280, 1280), (1280, 768), (768, 1280)]
+
+
+def make_dir(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+
+def delete_files(directory, ext):
+    for filename in os.listdir(directory):
+        if filename.endswith(f".{ext}"):
+            filepath = os.path.join(directory, filename)
+            os.remove(filepath)
 
 
 # HTMLのパース関数
@@ -88,13 +106,21 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
+    delete_files(IMAGE_DIR, "jsonl")
+    delete_files(IMAGE_DIR, "jpg")
+
     metadata_list = main(args.num_workers)
 
-    with open("./images/metadata.jsonl", "w", encoding="utf-8") as f:
+    with open(f"{IMAGE_DIR}/metadata.jsonl", "w", encoding="utf-8") as f:
         for html_text in metadata_list:
             f.write(json.dumps(html_text, ensure_ascii=False) + "\n")
 
     upload_dataset = load_dataset(
-        "imagefolder", data_dir="./images", cache_dir="./cache"
+        "imagefolder", data_dir=IMAGE_DIR, cache_dir="./cache"
     )
-    upload_dataset.push_to_hub("team-hatakeyama-phase2/web-images-for-text-understanding")
+    upload_dataset.push_to_hub(
+        "team-hatakeyama-phase2/Synthetic-TextWebImages", subset_name, private=True
+    )
+
+    delete_files(IMAGE_DIR, "jsonl")
+    delete_files(IMAGE_DIR, "jpg")
