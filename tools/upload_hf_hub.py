@@ -35,7 +35,7 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument("input_file", type=str, help="Input JSONL file containing text data.")
 parser.add_argument("repo_name", type=str, help="hugging face repository name")
-parser.add_argument("subset_name", type=str, help="hugging face repository subset name")
+parser.add_argument("subset_name", type=str, help="hugging face repository subset name", default=None)
 
 args = parser.parse_args()
 
