@@ -14,7 +14,7 @@ gpu_num=$2
 while true
 do
   # ReqNodeNotAvailで保留中のジョブIDを取得
-  job_ids=$(squeue -h -t PENDING -o "%i %r %j" | grep "0618cc_" | grep "ReqNodeNotAvail, May be reserved for other job" | awk '{print $1}')
+  job_ids=$(squeue -h -t PENDING -o "%i %r %j" | grep "0705cc_" | grep "ReqNodeNotAvail, May be reserved for other job" | awk '{print $1}')
 
   # ジョブIDが存在しない場合の処理
   if [ -z "$job_ids" ]; then
@@ -40,7 +40,7 @@ do
 
   # ノードの存在状態を表示
   if $nodes_exist; then
-    bash tools/update_0618cc_gpu_num.sh ${node_list} stop ${gpu_num}
+    bash tools/update_0705cc_gpu_num.sh ${node_list} stop ${gpu_num}
   else
     echo "ノードが存在しません"
     exit 1

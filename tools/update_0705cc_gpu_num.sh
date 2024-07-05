@@ -23,7 +23,7 @@ else
 fi
 
 # 1. ジョブIDを取得する
-job_ids=$(squeue | grep "${hostname}$" | grep 0618cc_ | awk '{print $1}')
+job_ids=$(squeue | grep "${hostname}$" | grep 0705cc_ | awk '{print $1}')
 
 # 2. それぞれのジョブIDに対して対応するファイルを書き換える (指定された数まで)
 count=0
