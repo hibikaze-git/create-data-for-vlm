@@ -62,6 +62,10 @@ RUN /bin/bash -c "source ~/.bashrc && pip install --no-cache-dir -r requirements
 
 RUN pip install flash_attn==2.5.8
 
+RUN pip install bitsandbytes
+
+RUN pip install timm
+
 RUN mkdir -p /tmp/own/docker/entrypoint
 COPY docker-entrypoint.sh /tmp/own/docker/entrypoint
 
