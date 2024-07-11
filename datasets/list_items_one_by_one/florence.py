@@ -120,7 +120,7 @@ class FlorenceManager:
         return idx_label_dict, skipped_labels
 
     def synthesis(self, image_path):
-        image = Image.open(image_path)
+        image = Image.open(image_path).convert('RGB')
         image_name = os.path.splitext(os.path.basename(image_path))[0]
 
         synthesis_dict = {}
