@@ -9,9 +9,9 @@ import glob
 import json
 import os
 
+from calm3 import Calm3Manager
 from florence import FlorenceManager
 from phi3 import Phi3Manager
-from calm3 import Calm3Manager
 from tqdm import tqdm
 
 
@@ -30,13 +30,26 @@ def list_processed_files(directory):
 
 def main(args):
     florence_manager = FlorenceManager(args.image_output_dir)
-    #phi3_manager = Phi3Manager()
-    #calm3_manager = Calm3Manager()
+    # phi3_manager = Phi3Manager()
+    # calm3_manager = Calm3Manager()
+
+    with open(
+        "./annotations/captions_train2017.json",
+        "r",
+        encoding="utf-8",
+    ) as f:
+        captions = json.load(f)
+
+    license_dict = {}
+
+    for image_info in captions["images"]:
+        license_dict[image_info["file_name"].split(".")[0]] = image_info["license"]
 
     try:
         pattern = os.path.join(args.input_dir, "**/*.*")
         file_paths = glob.glob(pattern, recursive=True)
         print("num_file_path:", len(file_paths))
+        print("num_captions:", len(license_dict.keys()))
         print(file_paths[:5])
 
         target_file_paths = file_paths
@@ -50,14 +63,14 @@ def main(args):
             print(file_path)
             photoid = os.path.splitext(os.path.basename(file_path))[0]
 
-            if photoid not in processed_photoids:
+            if photoid not in processed_photoids and license_dict[photoid] in [4, 5]:
                 output_filename = str(photoid) + ".jsonl"
                 output_path = os.path.join(args.jsonl_output_dir, output_filename)
 
                 synthesis_dict = florence_manager.synthesis(file_path)
 
-                #synthesis_dict = phi3_manager.translate(synthesis_dict)
-                #synthesis_dict = calm3_manager.translate(synthesis_dict)
+                # synthesis_dict = phi3_manager.translate(synthesis_dict)
+                # synthesis_dict = calm3_manager.translate(synthesis_dict)
 
                 with open(output_path, "w", encoding="utf-8") as f:
                     f.write(json.dumps(synthesis_dict, ensure_ascii=False) + "\n")
@@ -65,7 +78,7 @@ def main(args):
             else:
                 print(f"skip: {photoid}")
 
-            #if i == 10:
+            # if i == 10:
             #    break
 
     except Exception as e:
