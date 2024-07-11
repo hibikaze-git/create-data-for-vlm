@@ -80,7 +80,7 @@ class FlorenceManager:
                 "label": label,
                 "bbox": bbox,
                 "center_x": center_x,
-                "cente_y": center_y,
+                "center_y": center_y,
             }
 
             # ラベル
