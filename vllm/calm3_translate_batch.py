@@ -1,8 +1,8 @@
 """
-python calm3_translate_batch.py atsushi3110/en-ja-parallel-corpus-augmented --batch_size 100 --tensor_parallel_size 4
+python calm3_translate_batch.py team-hatakeyama-phase2/list_items_one_by_one --batch_size 100 --tensor_parallel_size 4
 
 for test
-python calm3_translate_batch.py atsushi3110/en-ja-parallel-corpus-augmented --num_samples 10 --batch_size 2 --tensor_parallel_size 1
+python calm3_translate_batch.py team-hatakeyama-phase2/list_items_one_by_one --num_samples 10 --batch_size 2 --tensor_parallel_size 1
 """
 
 import argparse
@@ -38,19 +38,19 @@ def list_processed_files(directory):
 
 
 def load_dataset(name):
-    return datasets.load_dataset(name)["train"]
+    return datasets.load_dataset(name, cache_dir="./cache")["train"]
 
 
 class Translater:
     def __init__(self, max_num_seqs, tensor_parallel_size, save_dir) -> None:
         # vLLMでモデルを初期化 tensor_parallel_sizeは使用するGPU数
         self.model = LLM(
-            # model="cyberagent/calm3-22b-chat",
-            model="cyberagent/calm2-7b-chat",  # テスト用
+            model="cyberagent/calm3-22b-chat",
+            #model="Qwen/Qwen2-1.5B-Instruct",  # テスト用
             tensor_parallel_size=tensor_parallel_size,
             max_num_seqs=max_num_seqs,  # バッチサイズに合わせて調整
             max_num_batched_tokens=16384,  # トークン数を増やす
-            max_model_len=1024,  # テスト用
+            #max_model_len=1024,  # テスト用
             download_dir="../cache",
         )
 
@@ -91,19 +91,31 @@ class Translater:
 
             batch = dataset[i : i + batch_size]
 
-            # データセットの構造に基づいて、適切なキーを使用
-            en_texts = batch["en"]
-            ja_texts = batch["ja"]
+            converted_data = []
+
+            for i in range(len(batch["id"])):
+                item = {key: value[i] for key, value in batch.items()}
+                converted_data.append(item)
+
+            # print(converted_data)
+
+            en_texts = batch["detailed"]
 
             translated_texts = self.translate_batch(en_texts)  # 英語から日本語に翻訳
 
-            for en, ja, translated in zip(en_texts, ja_texts, translated_texts):
-                translated_item = {
-                    "en": en,
-                    "ja_original": ja,
-                    "ja_calm3": translated,
-                }
-                translated_data.append(translated_item)
+            en_labels = batch["labels"]
+
+            translated_labels = []
+
+            for en_label_list in en_labels:
+                translated_labels.append(self.translate_batch(en_label_list))
+
+            for data, translated_text, translated_label_list in zip(
+                converted_data, translated_texts, translated_labels
+            ):
+                data["detailed_ja"] = translated_text
+                data["labels_ja"] = translated_label_list
+                translated_data.append(data)
 
             with open(
                 os.path.join(self.save_dir, f"{filename}.jsonl"), "w", encoding="utf-8"
