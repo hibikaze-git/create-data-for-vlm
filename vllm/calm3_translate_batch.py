@@ -1,5 +1,5 @@
 """
-python calm3_translate_batch.py atsushi3110/en-ja-parallel-corpus-augmented --num_samples 10 --output_file en_ja_parallel_calm3.json --batch_size 100
+python calm3_translate_batch.py atsushi3110/en-ja-parallel-corpus-augmented --num_samples 10 --output_file en_ja_parallel_calm3.json --batch_size 100 --tensor_parallel_size 1
 """
 
 import argparse
@@ -24,14 +24,15 @@ def load_dataset(name):
 
 
 class Translater:
-    def __init__(self, max_num_seqs) -> None:
+    def __init__(self, max_num_seqs, tensor_parallel_size) -> None:
         # vLLMでモデルを初期化 tensor_parallel_sizeは使用するGPU数
         self.model = LLM(
             model="cyberagent/calm3-22b-chat",
-            tensor_parallel_size=8,
+            #model="cyberagent/calm2-7b-chat", # テスト用
+            tensor_parallel_size=tensor_parallel_size,
             max_num_seqs=max_num_seqs,  # バッチサイズに合わせて調整
             max_num_batched_tokens=16384,  # トークン数を増やす
-            #max_model_len=1024,
+            #max_model_len=1024, # テスト用
             download_dir="../cache",
         )
 
@@ -97,12 +98,15 @@ if __name__ == "__main__":
     parser.add_argument(
         "--batch_size", type=int, default=32, help="Batch size for translation"
     )
+    parser.add_argument(
+        "--tensor_parallel_size", type=int, default=1, help="set num gpu"
+    )
 
     args = parser.parse_args()
 
     dataset = load_dataset(args.dataset_name)
 
-    translater = Translater(args.batch_size)
+    translater = Translater(args.batch_size, args.tensor_parallel_size)
 
     translater.translate_dataset(
         dataset,
