@@ -131,7 +131,7 @@ class Translater:
                 translated_labels.append(
                     self.translate_batch(
                         [
-                            PROMPT.format(text=text)
+                            PROMPT_LABEL.format(text=text)
                             for text in en_label_list
                         ]
                     )
