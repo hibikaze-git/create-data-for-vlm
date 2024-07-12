@@ -12,7 +12,7 @@
 
 # Command(s) goes here
 source ~/miniconda3/etc/profile.d/conda.sh
-conda activate vllm
+conda activate vllm-118
 
 cd /storage5/multimodal/work/yamaguchi/create-data-for-vlm
 bash tools/update_0705cc_gpu_num.sh slurm0-a3-ghpc-0 stop 1
