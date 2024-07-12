@@ -36,4 +36,4 @@ jsonl_data = read_jsonl("./all_0712.jsonl")
 
 transformed_data_list = [transform_data(data) for data in jsonl_data]
 
-save_to_jsonl(transformed_data_list, "./all_0712.jsonl")
+save_to_jsonl(transformed_data_list, "./all_0712_convert.jsonl")
