@@ -74,7 +74,7 @@ class Translater:
         )
 
         self.sampling_params = SamplingParams(
-            temperature=0.7, top_p=0.95, max_tokens=1024
+            temperature=0.0, top_p=1.0, max_tokens=1024
         )
 
         self.save_dir = save_dir
