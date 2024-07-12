@@ -20,4 +20,4 @@ bash tools/update_0705cc_gpu_num.sh slurm0-a3-ghpc-0 stop 1
 
 cd /storage5/multimodal/work/yamaguchi/create-data-for-vlm/vllm
 
-python calm3_translate_batch.py team-hatakeyama-phase2/list_items_one_by_one --batch_size 100 --tensor_parallel_size 1
+python calm3_translate_batch.py team-hatakeyama-phase2/list_items_one_by_one --batch_size 50 --tensor_parallel_size 1
