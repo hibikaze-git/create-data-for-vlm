@@ -1,8 +1,12 @@
 """
+python calm3_translate_batch.py atsushi3110/en-ja-parallel-corpus-augmented --batch_size 100 --tensor_parallel_size 4
+
+for test
 python calm3_translate_batch.py atsushi3110/en-ja-parallel-corpus-augmented --num_samples 10 --batch_size 2 --tensor_parallel_size 1
 """
 
 import argparse
+import glob
 import json
 import os
 
@@ -23,6 +27,14 @@ PROMPT = """\
 def make_dir(path):
     if not os.path.exists(path):
         os.makedirs(path)
+
+
+def list_processed_files(directory):
+    # 指定されたディレクトリ内のファイルを取得
+    files = glob.glob(os.path.join(directory, "*.jsonl"))
+    # id抽出
+    filename_list = [os.path.splitext(os.path.basename(file))[0] for file in files]
+    return filename_list
 
 
 def load_dataset(name):
@@ -57,9 +69,26 @@ class Translater:
         if num_samples is not None:
             dataset = dataset.select(range(min(num_samples, len(dataset))))
 
-        translated_data = []
+        processed_fienames = list_processed_files(self.save_dir)
+
+        if processed_fienames:
+            saved_batch_size = int(processed_fienames[0].split("_")[-1])
+
+            assert batch_size == saved_batch_size, "batch_sizeが一致しません。"
+
+        print("\n==================== processed_fienames ====================")
+        print(processed_fienames)
+        print("============================================================\n")
 
         for i in tqdm(range(0, len(dataset), batch_size), desc="バッチ処理中"):
+            translated_data = []
+
+            filename = f"{i}_{batch_size}"
+
+            if filename in processed_fienames:
+                print(f"skip: {filename}")
+                continue
+
             batch = dataset[i : i + batch_size]
 
             # データセットの構造に基づいて、適切なキーを使用
@@ -76,9 +105,9 @@ class Translater:
                 }
                 translated_data.append(translated_item)
 
-            filename = os.path.join(self.save_dir, f"{i}_{batch_size}.jsonl")
-
-            with open(filename, "w", encoding="utf-8") as f:
+            with open(
+                os.path.join(self.save_dir, f"{filename}.jsonl"), "w", encoding="utf-8"
+            ) as f:
                 for data in translated_data:
                     f.write(json.dumps(data, ensure_ascii=False) + "\n")
 
