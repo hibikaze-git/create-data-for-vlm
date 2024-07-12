@@ -33,6 +33,11 @@ def main(args):
     # phi3_manager = Phi3Manager()
     # calm3_manager = Calm3Manager()
 
+    skip_id_list = [
+        "000000194000",
+        "000000537918"
+    ]
+
     with open(
         "./annotations/captions_train2017.json",
         "r",
@@ -63,7 +68,7 @@ def main(args):
             print(file_path)
             photoid = os.path.splitext(os.path.basename(file_path))[0]
 
-            if photoid not in processed_photoids and license_dict[photoid] in [4, 5]:
+            if photoid not in processed_photoids and license_dict[photoid] in [4, 5] and photoid not in skip_id_list:
                 output_filename = str(photoid) + ".jsonl"
                 output_path = os.path.join(args.jsonl_output_dir, output_filename)
 
