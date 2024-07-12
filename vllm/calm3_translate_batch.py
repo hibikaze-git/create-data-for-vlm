@@ -1,9 +1,10 @@
 """
-python calm3_translate_batch.py atsushi3110/en-ja-parallel-corpus-augmented --num_samples 10 --output_file en_ja_parallel_calm3.json --batch_size 100 --tensor_parallel_size 1
+python calm3_translate_batch.py atsushi3110/en-ja-parallel-corpus-augmented --num_samples 10 --batch_size 2 --tensor_parallel_size 1
 """
 
 import argparse
 import json
+import os
 
 from tqdm import tqdm
 
@@ -19,20 +20,25 @@ PROMPT = """\
 <|im_start|>assistant"""
 
 
+def make_dir(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+
 def load_dataset(name):
     return datasets.load_dataset(name)["train"]
 
 
 class Translater:
-    def __init__(self, max_num_seqs, tensor_parallel_size) -> None:
+    def __init__(self, max_num_seqs, tensor_parallel_size, save_dir) -> None:
         # vLLMでモデルを初期化 tensor_parallel_sizeは使用するGPU数
         self.model = LLM(
-            model="cyberagent/calm3-22b-chat",
-            #model="cyberagent/calm2-7b-chat", # テスト用
+            # model="cyberagent/calm3-22b-chat",
+            model="cyberagent/calm2-7b-chat",  # テスト用
             tensor_parallel_size=tensor_parallel_size,
             max_num_seqs=max_num_seqs,  # バッチサイズに合わせて調整
             max_num_batched_tokens=16384,  # トークン数を増やす
-            #max_model_len=1024, # テスト用
+            max_model_len=1024,  # テスト用
             download_dir="../cache",
         )
 
@@ -40,12 +46,14 @@ class Translater:
             temperature=0.7, top_p=0.95, max_tokens=1024
         )
 
+        self.save_dir = save_dir
+
     def translate_batch(self, texts):
         prompts = [PROMPT.format(text=text) for text in texts]
         outputs = self.model.generate(prompts, self.sampling_params)
         return [output.outputs[0].text.strip() for output in outputs]
 
-    def translate_dataset(self, dataset, batch_size, num_samples, output_file):
+    def translate_dataset(self, dataset, batch_size, num_samples):
         if num_samples is not None:
             dataset = dataset.select(range(min(num_samples, len(dataset))))
 
@@ -68,17 +76,11 @@ class Translater:
                 }
                 translated_data.append(translated_item)
 
-            # 一定間隔で中間結果を保存
-            if (i + batch_size) % (batch_size * 10) == 0:
-                self.save_results(translated_data, output_file)
+            filename = os.path.join(self.save_dir, f"{i}_{batch_size}.jsonl")
 
-        # 最終結果を保存
-        self.save_results(translated_data, output_file)
-        print(f"翻訳が完了し、結果を'{output_file}' に保存しました。")
-
-    def save_results(self, data, filename):
-        with open(filename, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
+            with open(filename, "w", encoding="utf-8") as f:
+                for data in translated_data:
+                    f.write(json.dumps(data, ensure_ascii=False) + "\n")
 
 
 if __name__ == "__main__":
@@ -88,12 +90,6 @@ if __name__ == "__main__":
     parser.add_argument("dataset_name", type=str, help="Name of the dataset to load")
     parser.add_argument(
         "--num_samples", type=int, default=None, help="Number of samples to process"
-    )
-    parser.add_argument(
-        "--output_file",
-        type=str,
-        default="translated_dataset.json",
-        help="File to save the translated results",
     )
     parser.add_argument(
         "--batch_size", type=int, default=32, help="Batch size for translation"
@@ -106,11 +102,17 @@ if __name__ == "__main__":
 
     dataset = load_dataset(args.dataset_name)
 
-    translater = Translater(args.batch_size, args.tensor_parallel_size)
+    save_dir = os.path.join("./jsonl", args.dataset_name.split("/")[-1])
+    make_dir(save_dir)
+
+    translater = Translater(args.batch_size, args.tensor_parallel_size, save_dir)
 
     translater.translate_dataset(
         dataset,
         batch_size=args.batch_size,
         num_samples=args.num_samples,
-        output_file=args.output_file,
     )
+
+    print("==================================")
+    print("======== process complete ========")
+    print("==================================")
