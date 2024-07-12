@@ -27,7 +27,10 @@ PROMPT_LABEL = """\
 <|im_start|>system
 あなたは親切なAIアシスタントです。<|im_end|>
 <|im_start|>user
-以下の英単語または英語のフレーズを日本語に翻訳してください。
+以下はシーンの説明です。
+{scene}
+
+以下の英単語または英語のフレーズを、シーンの説明に合う日本語に翻訳してください。翻訳した単語・フレーズのみ回答してください。
 {text}<|im_end|>
 <|im_start|>assistant"""
 
@@ -68,8 +71,7 @@ class Translater:
 
         self.save_dir = save_dir
 
-    def translate_batch(self, texts, prompt):
-        prompts = [prompt.format(text=text) for text in texts]
+    def translate_batch(self, prompts):
         outputs = self.model.generate(prompts, self.sampling_params)
         return [output.outputs[0].text.strip() for output in outputs]
 
@@ -110,16 +112,21 @@ class Translater:
             en_texts = batch["detailed"]
 
             translated_texts = self.translate_batch(
-                en_texts, PROMPT
+                [PROMPT.format(text=text) for text in en_texts]
             )  # 英語から日本語に翻訳
 
             en_labels = batch["labels"]
 
             translated_labels = []
 
-            for en_label_list in en_labels:
+            for en_label_list, translated_text in zip(en_labels, translated_texts):
                 translated_labels.append(
-                    self.translate_batch(en_label_list, PROMPT_LABEL)
+                    self.translate_batch(
+                        [
+                            PROMPT.format(text=text, scene=translated_text)
+                            for text in en_label_list
+                        ]
+                    )
                 )
 
             for data, translated_text, translated_label_list in zip(
