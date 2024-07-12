@@ -31,6 +31,8 @@ class Translater:
             tensor_parallel_size=8,
             max_num_seqs=max_num_seqs,  # バッチサイズに合わせて調整
             max_num_batched_tokens=16384,  # トークン数を増やす
+            #max_model_len=1024,
+            download_dir="../cache",
         )
 
         self.sampling_params = SamplingParams(
