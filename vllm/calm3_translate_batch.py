@@ -23,6 +23,14 @@ PROMPT = """\
 {text}<|im_end|>
 <|im_start|>assistant"""
 
+PROMPT_LABEL = """\
+<|im_start|>system
+あなたは親切なAIアシスタントです。<|im_end|>
+<|im_start|>user
+以下の英単語または英語のフレーズを日本語に翻訳してください。
+{text}<|im_end|>
+<|im_start|>assistant"""
+
 
 def make_dir(path):
     if not os.path.exists(path):
@@ -46,11 +54,11 @@ class Translater:
         # vLLMでモデルを初期化 tensor_parallel_sizeは使用するGPU数
         self.model = LLM(
             model="cyberagent/calm3-22b-chat",
-            #model="Qwen/Qwen2-1.5B-Instruct",  # テスト用
+            # model="Qwen/Qwen2-1.5B-Instruct",  # テスト用
             tensor_parallel_size=tensor_parallel_size,
             max_num_seqs=max_num_seqs,  # バッチサイズに合わせて調整
             max_num_batched_tokens=16384,  # トークン数を増やす
-            #max_model_len=1024,  # テスト用
+            # max_model_len=1024,  # テスト用
             download_dir="../cache",
         )
 
@@ -60,8 +68,8 @@ class Translater:
 
         self.save_dir = save_dir
 
-    def translate_batch(self, texts):
-        prompts = [PROMPT.format(text=text) for text in texts]
+    def translate_batch(self, texts, prompt):
+        prompts = [prompt.format(text=text) for text in texts]
         outputs = self.model.generate(prompts, self.sampling_params)
         return [output.outputs[0].text.strip() for output in outputs]
 
@@ -101,14 +109,18 @@ class Translater:
 
             en_texts = batch["detailed"]
 
-            translated_texts = self.translate_batch(en_texts)  # 英語から日本語に翻訳
+            translated_texts = self.translate_batch(
+                en_texts, PROMPT
+            )  # 英語から日本語に翻訳
 
             en_labels = batch["labels"]
 
             translated_labels = []
 
             for en_label_list in en_labels:
-                translated_labels.append(self.translate_batch(en_label_list))
+                translated_labels.append(
+                    self.translate_batch(en_label_list, PROMPT_LABEL)
+                )
 
             for data, translated_text, translated_label_list in zip(
                 converted_data, translated_texts, translated_labels
