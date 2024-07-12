@@ -23,14 +23,22 @@ PROMPT = """\
 {text}<|im_end|>
 <|im_start|>assistant"""
 
+# PROMPT_LABEL = """\
+# <|im_start|>system
+# あなたは親切なAIアシスタントです。<|im_end|>
+# <|im_start|>user
+# 以下はシーンの説明です。
+# {scene}
+
+# 以下の英単語または英語のフレーズを、シーンの説明に合う日本語に翻訳してください。翻訳した単語・フレーズのみ回答してください。
+# {text}<|im_end|>
+# <|im_start|>assistant"""
+
 PROMPT_LABEL = """\
 <|im_start|>system
 あなたは親切なAIアシスタントです。<|im_end|>
 <|im_start|>user
-以下はシーンの説明です。
-{scene}
-
-以下の英単語または英語のフレーズを、シーンの説明に合う日本語に翻訳してください。翻訳した単語・フレーズのみ回答してください。
+以下の英単語または英語のフレーズを日本語に翻訳してください。翻訳した単語・フレーズのみ回答してください。
 {text}<|im_end|>
 <|im_start|>assistant"""
 
@@ -123,7 +131,7 @@ class Translater:
                 translated_labels.append(
                     self.translate_batch(
                         [
-                            PROMPT.format(text=text, scene=translated_text)
+                            PROMPT.format(text=text)
                             for text in en_label_list
                         ]
                     )
