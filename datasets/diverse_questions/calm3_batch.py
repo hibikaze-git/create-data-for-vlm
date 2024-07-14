@@ -139,11 +139,12 @@ class Translater:
                 ]
             )
 
-            for data, question, answer, translated_text in zip(
-                converted_data, question_list, answer_list, translated_texts
+            for data, category, question, answer, translated_text in zip(
+                converted_data, category_list, question_list, answer_list, translated_texts
             ):
                 data["phi3_caption_ja"] = translated_text
-                data["question_ja"] = question
+                data["category"] = question
+                data["question"] = question
                 data["answer"] = answer
                 translated_data.append(data)
 
