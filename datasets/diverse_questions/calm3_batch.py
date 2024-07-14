@@ -143,7 +143,7 @@ class Translater:
                 converted_data, category_list, question_list, answer_list, translated_texts
             ):
                 data["phi3_caption_ja"] = translated_text
-                data["category"] = question
+                data["category"] = category
                 data["question"] = question
                 data["answer"] = answer
                 translated_data.append(data)
