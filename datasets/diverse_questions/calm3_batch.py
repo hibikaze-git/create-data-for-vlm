@@ -32,7 +32,7 @@ QA_PROMPT = """\
 以下は画像の説明文です。
 {scene}
 
-画像の説明に基づき、以下の指示に従ってください。
+画像の説明に基づき、以下の指示に従ってください。回答は、視覚的な AI アシスタントが画像を見て質問に答えているような口調でなければなりません。
 {question}<|im_end|>
 <|im_start|>assistant"""
 
@@ -68,7 +68,10 @@ class Translater:
         )
 
         self.sampling_params = SamplingParams(
-            temperature=0.0, top_p=1.0, max_tokens=1024
+            temperature=0.1,
+            top_p=1.0,
+            max_tokens=2048,
+            repetition_penalty=1.05,
         )
 
         self.save_dir = save_dir
