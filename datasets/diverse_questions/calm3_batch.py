@@ -64,7 +64,7 @@ class Translater:
             max_num_seqs=max_num_seqs,  # バッチサイズに合わせて調整
             max_num_batched_tokens=16384,  # トークン数を増やす
             # max_model_len=1024,  # テスト用
-            download_dir="../cache",
+            download_dir="../../cache",
         )
 
         self.sampling_params = SamplingParams(
