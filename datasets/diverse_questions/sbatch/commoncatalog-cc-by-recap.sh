@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Command line options go here
-#SBATCH --time=7:00:00
+#SBATCH --time=23:00:00
 #SBATCH --nodelist=slurm0-a3-ghpc-0
 #SBATCH --job-name=vlm_synthesis_data
 #SBATCH --output=sbatch_logs/commoncatalog-cc-by-recap.out
